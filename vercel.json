@@ -2,7 +2,7 @@
     "rewrites": [
       {
         "source": "/telemetry/:path*",
-        "destination": "https://rocketlab-telemetry-backend.vercel.app"
+        "destination": "https://rocketlab-telemetry-backend.vercel.app*"
       }
     ]
   }
