@@ -157,7 +157,7 @@ describe('App', () => {
     render(<App />);
     await waitFor(() => expect(within(getTable()).getByText('SAT-001')).toBeInTheDocument());
 
-    await userEvent.click(screen.getByLabelText(/simulate outage/i));
+    await userEvent.click(screen.getByLabelText(/simulate backend outage/i));
 
     const row = within(getTable()).getByText('SAT-001').closest('tr') as HTMLElement;
     await userEvent.click(within(row).getByRole('button', { name: /delete/i }));

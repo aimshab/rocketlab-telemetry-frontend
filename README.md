@@ -33,23 +33,13 @@ VITE_API_MODE=mock npm run dev
 ```
 
 `src/api/telemetryApi.ts` is the single entry point every component/hook imports from; it
-re-exports whichever client is active. A small badge in the app header ("Live API" / "Mock
-API") shows which one is running. Both clients share the same function signatures
+re-exports whichever client is active. Both clients share the same function signatures
 (`getTelemetry`, `createTelemetry`, `deleteTelemetry`, `ApiError`, `setSimulateFailures`), so
-the rest of the app — including the "Simulate outage" toggle — behaves identically either way.
+the rest of the app behaves identically either way.
 
-## Backend
-
-This app expects the FastAPI backend in `../backend` to be running on `http://localhost:3000`
-(only needed when `VITE_API_MODE=real`, the default):
-
-```bash
-cd ../backend
-python -m venv .venv
-.venv\Scripts\activate          # Windows
-pip install -r requirements-dev.txt
-uvicorn app.main:app --reload --port 3000
-```
+In **dev mode** (`npm run dev`), the header shows a "Live API" / "Mock API" badge and a
+"Simulate backend outage" toggle. Those controls are hidden in production builds
+(`import.meta.env.DEV`).
 
 ### Why a dev proxy instead of calling `localhost:3000` directly
 
@@ -68,7 +58,7 @@ server: {
 },
 ```
 
-`src/api/telemetryApi.ts` therefore calls relative paths (e.g. `/telemetry`) by default. If
+`src/api/realTelemetryApi.ts` therefore calls relative paths (e.g. `/telemetry`) by default. If
 your backend runs on a different port, override it before starting the dev server:
 
 ```bash
@@ -104,9 +94,9 @@ npm run lint        # lint the codebase
 
 ## Features
 
-- **Telemetry table** with columns for Satellite ID, Timestamp, Altitude, Velocity, and
-  Health Status (color-coded badges; unrecognized status strings still render with a neutral
-  badge, since the backend treats `status` as free-form text).
+- **Telemetry table** with columns for Satellite ID, Timestamp (UTC, including milliseconds),
+  Altitude, Velocity, and Health Status (color-coded badges; unrecognized status strings still
+  render with a neutral badge, since the backend treats `status` as free-form text).
 - **Filtering** by Satellite ID and Health Status, applied server-side (`GET
   /telemetry?satelliteId=&status=`) — only matching rows are fetched, so the table stays fast
   as the data set grows instead of downloading everything up front. Dropdown options are
@@ -115,15 +105,17 @@ npm run lint        # lint the codebase
 - **Sorting** by Timestamp, Altitude, or Velocity — click a column header to toggle
   ascending/descending order. Sorting stays client-side (over whatever the active filter
   currently has loaded), since the API has no sort parameter.
-- **Add entry form** with client-side validation mirroring the backend's rules (non-empty
-  Satellite ID, valid date/time, altitude/velocity strictly greater than 0) and inline error
-  messages.
-- **Delete** with disabled/spinner state on the affected row while the request is in flight.
+- **Add entry form** opened from an "Add Telemetry Entry" button (collapsed by default).
+  Client-side validation mirrors the backend's rules (non-empty Satellite ID, valid UTC
+  date/time, altitude/velocity strictly greater than 0). Timestamp is a plain text field that
+  auto-formats as you type (`YYYY-MM-DD HH:mm:ss.SSS`, UTC) and is submitted as ISO 8601.
+- **Delete** with an inline confirmation step, plus a disabled/spinner state on the affected
+  row while the request is in flight.
 - **Loading spinner** while the initial data set is being fetched.
 - **Error handling**: a banner surfaces API failures — network errors, and FastAPI's 422
   validation / 404 "not found" responses are parsed into readable messages — with
-  Retry/Dismiss actions. A "Simulate outage" toggle in the header forces every API call to
-  fail client-side, so you can see the error/retry flow on demand.
+  Retry/Dismiss actions. In dev mode, a "Simulate backend outage" toggle forces every API call
+  to fail client-side so you can exercise the error/retry flow on demand.
 - **Responsive layout**: the form and filters reflow on narrow screens, and the table
   scrolls horizontally on small viewports.
 
@@ -141,14 +133,16 @@ src/
   hooks/useTelemetry.ts    All telemetry state: server-filtered fetch/add/delete, loading &
                             error flags, and the filter dropdowns' known-value lists
   components/
-    TelemetryTable.tsx     Sortable table + delete action
+    TelemetryTable.tsx     Sortable table + delete with confirmation
     TelemetryFilters.tsx   Satellite ID / Health Status filters
-    TelemetryForm.tsx      Validated "add entry" form
+    TelemetryForm.tsx      Validated, toggleable "add entry" form (UTC timestamp text field)
     HealthBadge.tsx        Color-coded status pill (falls back gracefully for unknown values)
     Spinner.tsx            Small loading indicator
     ErrorBanner.tsx        Error message with retry/dismiss
-  utils/format.ts          Date/number formatting helpers
-  App.tsx                  Composes the above; owns filter/sort UI state
+  utils/
+    format.ts              UTC timestamp + number formatting for the table
+    timestampInput.ts      Masked UTC timestamp typing / parsing for the form
+  App.tsx                  Composes the above; owns filter/sort UI state; dev-only header tools
   types.ts                 Shared TelemetryEntry type + known status values
 ```
 
@@ -159,24 +153,17 @@ separating data concerns from presentation. `App.tsx` passes the active filters 
 `useTelemetry`, which re-fetches from the server whenever they change; only sorting is left as
 derived state (`useMemo` over whatever's currently loaded).
 
-### API contract (see `../backend/README.md`)
+## API contract
 
 | Method   | Path             | Notes |
-|----------|------------------|-------|
-| `GET`    | `/telemetry`     | Paginated (`page`, `limit`, max `limit=100`) and filterable (`satelliteId`, `status`, exact match). The client sends the active filters as query params and walks every page of that (already-filtered) result set |
-| `POST`   | `/telemetry`     | Body: `{ satelliteId, timestamp, altitude, velocity, status }`. `timestamp` must be strict ISO 8601; `altitude`/`velocity` must be `> 0` |
-| `DELETE` | `/telemetry/:id` | Returns `204` on success, `404` if the id doesn't exist |
+|----------|------------------|--------|
+| `GET`    | `/telemetry`     | Filters: `satelliteId`, `status`. Pagination: `page` (default 1), `limit` (default 10). Response: `{ items, page, limit, hasMore }` — no total count. The real client walks pages until `hasMore` is false. |
+| `POST`   | `/telemetry`     | Body: `{ satelliteId, timestamp, altitude, velocity, status }`. `timestamp` must be strict ISO 8601; `altitude`/`velocity` must be `> 0`. |
+| `GET`    | `/telemetry/:id` | Single entry (not used by the UI today). |
+| `DELETE` | `/telemetry/:id` | Deletes one entry. |
+| `GET`    | `/health`        | Health check (proxied in dev; not required by the UI). |
 
-Since the API has no endpoint for "distinct satellite IDs/statuses", the Satellite ID filter
-dropdown is seeded from a single unfiltered page (`peekSatelliteIds`, bounded cost regardless
-of data set size) and topped up from whatever satellite IDs/statuses the app happens to see
-afterwards (filtered results, newly-created entries). This trades perfect completeness (an id
-that only exists past the first 100 rows, and that's never otherwise fetched, won't appear in
-the dropdown) for a fixed, small cost as the data set grows.
-
-`status` is validated by the backend only as a non-empty string (not a fixed enum) — the UI
-offers `healthy` / `warning` / `critical` as the default choices but will happily display and
-filter by any other value already present in the data.
+Interactive docs when the backend is running: `http://localhost:3000/docs`.
 
 ## Testing
 
@@ -190,10 +177,12 @@ Unit tests cover:
 - `telemetryApi.test.ts` — the facade actually switches implementation based on
   `VITE_API_MODE`.
 - `useTelemetry.test.ts` — re-fetching when filters change, add/delete, and error surfacing.
-- Each component (table sorting, filter changes, form validation and submission,
-  error/loading states), and an end-to-end flow in `App.test.tsx` (load → server-filter → add
-  → delete → simulated outage), with a fake `fetch` that actually applies `satelliteId`/`status`
-  query params so the filtering tests exercise real request/response round trips.
+- `timestampInput.test.ts` — UTC mask formatting / parsing for the form timestamp field.
+- Each component (table sorting + delete confirmation, filter changes, form validation and
+  submission, error/loading states), and an end-to-end flow in `App.test.tsx` (load →
+  server-filter → add → delete → simulated outage), with a fake `fetch` that actually applies
+  `satelliteId`/`status` query params so the filtering tests exercise real request/response
+  round trips.
 
 All network calls are mocked (`fetch` is stubbed) so the whole suite runs without either the
 backend or a real network connection.

@@ -70,26 +70,28 @@ function App() {
         <div>
           <h1>Satellite Telemetry Dashboard</h1>
         </div>
-        <div className="app__header-controls">
-          <span
-            className={`api-mode-badge api-mode-badge--${apiMode}`}
-            title={
-              apiMode === 'mock'
-                ? 'VITE_API_MODE=mock — using the in-memory fake API (no backend needed).'
-                : 'VITE_API_MODE=real (default) — talking to the FastAPI backend via the dev proxy.'
-            }
-          >
-            {apiMode === 'mock' ? 'Mock API' : 'Live API'}
-          </span>
-          <label className="outage-toggle" title="Demonstrates error handling by simulating a network outage">
-            <input
-              type="checkbox"
-              checked={simulateOutage}
-              onChange={(e) => handleToggleOutage(e.target.checked)}
-            />
-            Simulate outage
-          </label>
-        </div>
+        {import.meta.env.DEV && (
+          <div className="app__header-controls">
+            <span
+              className={`api-mode-badge api-mode-badge--${apiMode}`}
+              title={
+                apiMode === 'mock'
+                  ? 'VITE_API_MODE=mock — using the in-memory fake API (no backend needed).'
+                  : 'VITE_API_MODE=real (default) — talking to the FastAPI backend via the dev proxy.'
+              }
+            >
+              {apiMode === 'mock' ? 'Mock API' : 'Live API'}
+            </span>
+            <label className="outage-toggle" title="Demonstrates error handling by simulating a network outage">
+              <input
+                type="checkbox"
+                checked={simulateOutage}
+                onChange={(e) => handleToggleOutage(e.target.checked)}
+              />
+              Simulate backend outage
+            </label>
+          </div>
+        )}
       </header>
 
       {error && <ErrorBanner message={error} onRetry={refresh} onDismiss={dismissError} />}
