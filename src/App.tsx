@@ -77,7 +77,7 @@ function App() {
               title={
                 apiMode === 'mock'
                   ? 'VITE_API_MODE=mock — using the in-memory fake API (no backend needed).'
-                  : 'VITE_API_MODE=real (default) — talking to the FastAPI backend via the dev proxy.'
+                  : 'VITE_API_MODE=real (default) — talking to the FastAPI backend directly.'
               }
             >
               {apiMode === 'mock' ? 'Mock API' : 'Live API'}

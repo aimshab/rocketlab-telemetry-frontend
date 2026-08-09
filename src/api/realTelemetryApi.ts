@@ -11,14 +11,15 @@ import type { NewTelemetryEntry, TelemetryEntry, TelemetryQueryFilters } from '.
  *
  * Active when `VITE_API_MODE` is unset or `"real"` (see `telemetryApi.ts`).
  *
- * Requests are sent to a relative path (e.g. `/telemetry`) by default, which
- * the Vite dev server proxies to `http://localhost:3000` (see
- * `vite.config.ts`) — this sidesteps CORS, since the backend doesn't send
- * `Access-Control-Allow-Origin` headers. Set `VITE_API_BASE_URL` to call a
- * different host directly (only works if that host allows CORS).
+ * Requests go to `VITE_API_BASE_URL` (default `http://localhost:3000`). The
+ * backend sends CORS headers, so the browser can call it directly from the
+ * Vite origin without a proxy.
  */
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '');
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000').replace(
+  /\/+$/,
+  '',
+);
 const MAX_PAGE_LIMIT = 100;
 
 let simulateFailures = false;
