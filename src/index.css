@@ -1,0 +1,217 @@
+:root {
+  --color-bg: #0b1220;
+  --color-bg-elevated: #131c2e;
+  --color-panel: #16213a;
+  --color-border: #263352;
+  --color-text: #e7ecf7;
+  --color-text-muted: #9aa7c2;
+  --color-primary: #4f8cff;
+  --color-primary-hover: #6ba0ff;
+  --color-danger: #ff5c5c;
+  --color-danger-hover: #ff7a7a;
+  --color-nominal: #34d399;
+  --color-warning: #fbbf24;
+  --color-critical: #f87171;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.25);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: radial-gradient(circle at top, #101a2e 0%, var(--color-bg) 55%);
+  color: var(--color-text);
+  font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+}
+
+input,
+select {
+  font-family: inherit;
+  font-size: 0.95rem;
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.55rem 0.7rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input:focus,
+select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.25);
+}
+
+input[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+/* Hides the native up/down spinner on specific number inputs (Altitude, Velocity) where
+   incrementing by the `step` isn't a meaningful way to enter a precise reading. */
+.input--no-spinner {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.input--no-spinner::-webkit-outer-spin-button,
+.input--no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.55rem 1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.05s ease, opacity 0.15s ease;
+}
+
+.button:active {
+  transform: translateY(1px);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.button--primary {
+  background: var(--color-primary);
+  color: #08122a;
+}
+
+.button--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.button--danger {
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--color-danger);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+.button--danger:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.22);
+  color: var(--color-danger-hover);
+}
+
+.button--ghost {
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.button--ghost:hover:not(:disabled) {
+  color: var(--color-text);
+  border-color: var(--color-primary);
+}
+
+.button--sm {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+.spinner-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.spinner {
+  width: 1.1em;
+  height: 1.1em;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top-color: currentColor;
+  animation: spin 0.75s linear infinite;
+}
+
+.spinner-wrap--sm .spinner {
+  width: 0.9em;
+  height: 0.9em;
+}
+
+.spinner-label {
+  color: inherit;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.health-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.health-badge::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.health-badge--nominal {
+  color: var(--color-nominal);
+  background: rgba(52, 211, 153, 0.12);
+}
+
+.health-badge--warning {
+  color: var(--color-warning);
+  background: rgba(251, 191, 36, 0.14);
+}
+
+.health-badge--critical {
+  color: var(--color-critical);
+  background: rgba(248, 113, 113, 0.14);
+}
+
+.health-badge--unknown {
+  color: var(--color-text-muted);
+  background: rgba(154, 167, 194, 0.14);
+}
