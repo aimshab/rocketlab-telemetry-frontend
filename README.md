@@ -23,7 +23,7 @@ switched purely via configuration — no code changes needed:
 
 | `VITE_API_MODE` | Client used | Requires backend running? |
 |------------------|-------------|----------------------------|
-| `real` (default, i.e. unset) | `src/api/realTelemetryApi.ts` | Yes — `../backend` on port 3000 |
+| `real` (default, i.e. unset) | `src/api/realTelemetryApi.ts` | Yes |
 | `mock` | `src/api/mockTelemetryApi.ts` | No |
 
 Set it in a `.env.local` file (copy `.env.example`) or inline when starting the dev server:
@@ -44,8 +44,8 @@ In **dev mode** (`npm run dev`), the header shows a "Live API" / "Mock API" badg
 
 ### Backend URL
 
-With `VITE_API_MODE=real`, the browser calls the FastAPI backend directly. We chose this
-approach to simplify deployment for this project: the backend enables CORS, so there is no
+With `VITE_API_MODE=real`, the browser calls the FastAPI backend directly. This approach was 
+chosen to simplify deployment for this project: the backend enables CORS, so there is no
 Vite (or other reverse-proxy) layer to configure in either local development or production —
 the same `VITE_API_BASE_URL` works in both. The default base URL is
 `http://localhost:3000`; override it with `VITE_API_BASE_URL` if needed:
@@ -100,8 +100,6 @@ npm run lint        # lint the codebase
   validation / 404 "not found" responses are parsed into readable messages — with
   Retry/Dismiss actions. In dev mode, a "Simulate backend outage" toggle forces every API call
   to fail client-side so you can exercise the error/retry flow on demand.
-- **Responsive layout**: the form and filters reflow on narrow screens, and the table
-  scrolls horizontally on small viewports.
 
 ## Architecture
 
